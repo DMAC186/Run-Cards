@@ -1,0 +1,449 @@
+<!DOCTYPE html> 
+
+<html lang="en"> 
+
+<head> 
+
+  <meta charset="UTF-8" /> 
+
+  <title>Fire Box Flashcard Drill</title> 
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
+
+  <style> 
+
+    body { 
+
+      font-family: "Segoe UI", sans-serif; 
+
+      margin: 0; 
+
+      background: #f0f4f8; 
+
+      display: flex; 
+
+      flex-direction: column; 
+
+      align-items: center; 
+
+      padding: 1em; 
+
+    } 
+
+ 
+
+    .timer { 
+
+      margin: 1em; 
+
+      font-weight: bold; 
+
+      font-size: 1.1em; 
+
+      color: #444; 
+
+    } 
+
+ 
+
+    .card-container { 
+
+      perspective: 1000px; 
+
+      width: 320px; 
+
+      height: 200px; 
+
+    } 
+
+ 
+
+    .card { 
+
+      width: 100%; 
+
+      height: 100%; 
+
+      position: relative; 
+
+      transform-style: preserve-3d; 
+
+      transition: transform 0.8s; 
+
+      cursor: pointer; 
+
+    } 
+
+ 
+
+    .flipped { 
+
+      transform: rotateY(180deg); 
+
+    } 
+
+ 
+
+    .face { 
+
+      position: absolute; 
+
+      width: 100%; 
+
+      height: 100%; 
+
+      border-radius: 12px; 
+
+      backface-visibility: hidden; 
+
+      display: flex; 
+
+      flex-direction: column; 
+
+      justify-content: center; 
+
+      align-items: center; 
+
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2); 
+
+      padding: 1em; 
+
+      box-sizing: border-box; 
+
+      text-align: center; 
+
+    } 
+
+ 
+
+    .front { 
+
+      background: #2e5aac; 
+
+      color: white; 
+
+    } 
+
+ 
+
+    .back { 
+
+      background: white; 
+
+      color: #333; 
+
+      transform: rotateY(180deg); 
+
+    } 
+
+ 
+
+    h2 { 
+
+      margin: 0; 
+
+      font-size: 1.2em; 
+
+    } 
+
+ 
+
+    .steps { 
+
+      font-size: 0.95em; 
+
+      line-height: 1.5; 
+
+    } 
+
+ 
+
+    .nav { 
+
+      margin-top: 1.5em; 
+
+      display: flex; 
+
+      gap: 1em; 
+
+      flex-wrap: wrap; 
+
+      justify-content: center; 
+
+    } 
+
+ 
+
+    button { 
+
+      padding: 0.6em 1.4em; 
+
+      font-size: 1em; 
+
+      border: none; 
+
+      border-radius: 5px; 
+
+      background: #2e5aac; 
+
+      color: white; 
+
+      cursor: pointer; 
+
+    } 
+
+ 
+
+    .finish { 
+
+      background: #28a745; 
+
+    } 
+
+ 
+
+    .summary { 
+
+      max-width: 600px; 
+
+      margin-top: 2em; 
+
+      background: white; 
+
+      border-radius: 8px; 
+
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+
+      padding: 1em; 
+
+    } 
+
+ 
+
+    .summary h3 { 
+
+      text-align: center; 
+
+      color: #2e5aac; 
+
+    } 
+
+ 
+
+    .summary ul { 
+
+      list-style: none; 
+
+      padding: 0; 
+
+    } 
+
+ 
+
+    .summary li { 
+
+      padding: 0.4em 0; 
+
+      border-bottom: 1px solid #eee; 
+
+    } 
+
+  </style> 
+
+</head> 
+
+<body> 
+
+ 
+
+<div class="timer" id="card-timer">Card Time: 0s</div> 
+
+ 
+
+<div class="card-container"> 
+
+  <div class="card" id="card"> 
+
+    <div class="face front" id="front"></div> 
+
+    <div class="face back" id="back"></div> 
+
+  </div> 
+
+</div> 
+
+ 
+
+<div class="nav"> 
+
+  <button onclick="nextCard()">Next ▶</button> 
+
+  <button class="finish" onclick="finish()">🏁 Finish</button> 
+
+</div> 
+
+ 
+
+<div class="summary" id="summary" style="display:none;"></div> 
+
+<button id="play-again" style="display:none; margin-top: 1em;" onclick="restart()">🔁 Play Again</button> 
+
+ 
+
+<script> 
+
+  const boxes = [ 
+
+    { box: "2305", location: "Linden Blvd. & E. 56 St.", steps: ["Left from quarters", "Four blocks to Linden Blvd.", "Right on Linden", "Nine blocks to E. 56 St."] }, 
+
+    { box: "2306", location: "Linden Blvd. & E. 52 St.", steps: ["Left from quarters", "Four blocks to Linden Blvd.", "Right on Linden", "Thirteen blocks to E. 52 St."] }, 
+
+    { box: "2309", location: "Church Ave. & E. 51 St.", steps: ["Left three blocks to Church Ave.", "Right on Church", "Eight blocks with an “S” turn", "Ten more blocks to E. 51 St."] }, 
+
+    { box: "2310", location: "Church Ave. & E. 53 St.", steps: ["Three blocks left", "Right on Church", "Eight blocks to “S” curve", "Eight more blocks to E. 53 St."] }, 
+
+    { box: "2312", location: "Church Ave. & E. 55 St.", steps: ["Left three blocks", "Right on Church", "Eight blocks to bend", "Six more blocks"] }, 
+
+    { box: "2313", location: "Church Ave. & E. 57 St.", steps: ["Same start", "Eight blocks", "Four more after the bend"] }, 
+
+    { box: "2314", location: "Church Ave. & E. 59 St.", steps: ["Left three blocks", "Shorter three-block run on Church", "To E. 95 St."] }, 
+
+    { box: "2315", location: "Synder Ave. & Ralph Ave.", steps: ["Left one block to Lenox", "Right on Lenox four blocks", "Left on Kings Hwy ten blocks", "Left on Synder four blocks"] } 
+
+  ]; 
+
+ 
+
+  let index = 0; 
+
+  let cardTime = 0; 
+
+  let timer; 
+
+  let times = []; 
+
+ 
+
+  const front = document.getElementById("front"); 
+
+  const back = document.getElementById("back"); 
+
+  const card = document.getElementById("card"); 
+
+  const cardTimer = document.getElementById("card-timer"); 
+
+  const summary = document.getElementById("summary"); 
+
+  const playAgainButton = document.getElementById("play-again"); 
+
+ 
+
+  card.addEventListener('click', () => { 
+
+    card.classList.toggle("flipped"); 
+
+  }); 
+
+ 
+
+  function updateCard() { 
+
+    const box = boxes[index]; 
+
+    front.innerHTML = `<h2>Box ${box.box}</h2><p>${box.location}</p>`; 
+
+    back.innerHTML = `<div class="steps">${box.steps.map(s => `• ${s}`).join("<br>")}</div>`; 
+
+    card.classList.remove("flipped"); 
+
+    cardTime = 0; 
+
+    cardTimer.textContent = "Card Time: 0s"; 
+
+    clearInterval(timer); 
+
+    timer = setInterval(() => { 
+
+      cardTime++; 
+
+      cardTimer.textContent = `Card Time: ${cardTime}s`; 
+
+    }, 1000); 
+
+  } 
+
+ 
+
+  function nextCard() { 
+
+    times.push({ box: boxes[index].box, time: cardTime }); 
+
+    index = (index + 1) % boxes.length; 
+
+    updateCard(); 
+
+  } 
+
+ 
+
+  function finish() { 
+
+    times.push({ box: boxes[index].box, time: cardTime }); 
+
+    clearInterval(timer); 
+
+    document.querySelector(".card-container").style.display = "none"; 
+
+    document.querySelector(".nav").style.display = "none"; 
+
+    cardTimer.style.display = "none"; 
+
+    summary.style.display = "block"; 
+
+    summary.innerHTML = `<h3>Session Summary</h3><ul>` + 
+
+      times.map(t => `<li>Box ${t.box}: ${t.time}s</li>`).join('') + 
+
+      `</ul>`; 
+
+    playAgainButton.style.display = "inline-block"; 
+
+  } 
+
+ 
+
+  function restart() { 
+
+    index = 0; 
+
+    times = []; 
+
+    cardTime = 0; 
+
+    cardTimer.style.display = "block"; 
+
+    document.querySelector(".card-container").style.display = "block"; 
+
+    document.querySelector(".nav").style.display = "flex"; 
+
+    summary.style.display = "none"; 
+
+    playAgainButton.style.display = "none"; 
+
+    updateCard(); 
+
+  } 
+
+ 
+
+  updateCard(); 
+
+</script> 
+
+ 
+
+</body> 
+
+</html> 
+
+ 
